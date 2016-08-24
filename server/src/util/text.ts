@@ -9,9 +9,10 @@ export interface WordOffset {
 
 const regExSplitWords = XRegExp('(\\p{Ll})(\\p{Lu})', 'g');
 const regExSplitWords2 = XRegExp('(\\p{Lu})(\\p{Lu}\\p{Ll}+)', 'g');
-const regExWords = XRegExp("\\p{L}(?:[']\\p{L}|\\p{L})+", 'g');
+const regExWords = XRegExp("\\p{L}(?:[']\\p{L}|\\p{L})+|\\p{L}", 'g');
 const regExIsWord = XRegExp("^\\p{L}+(?:[']\\p{L}|\\p{L})+$", 'g');
 const regExIsSimpleWord = /^[A-Za-z']$/;
+const regExIgnoreCharacters = XRegExp('\\p{Hiragana}|\\p{Han}|\\p{Katakana}', 'g');
 const regExFirstUpper = XRegExp('^\\p{Lu}\\p{Ll}+$');
 const regExAllUpper = XRegExp('^\\p{Lu}+$');
 const regExAllLower = XRegExp('^\\p{Ll}+$');
@@ -86,6 +87,12 @@ export function extractWordsFromTextRx(text: string): Rx.Observable<WordOffset> 
             word: m[0],
             offset: m.index
         }))
+        // remove characters that match against \p{L} but are not letters (Chinese characters are an example).
+        .map(wo => ({
+            word: XRegExp.replace(wo.word, regExIgnoreCharacters, match => ' '.repeat(match.length)).trim(),
+            offset: wo.offset
+        }))
+        .filter(wo => !!wo.word)
         .tapOnCompleted(() => {
             // Add it to the pool
             reg.lastIndex = 0;
@@ -104,11 +111,11 @@ export function extractWordsFromCode(text: string): WordOffset[] {
 }
 
 export function isUpperCase(word: string) {
-    return word.match(regExAllUpper);
+    return !!word.match(regExAllUpper);
 }
 
 export function isLowerCase(word: string) {
-    return word.match(regExAllLower);
+    return !!word.match(regExAllLower);
 }
 
 export function isFirstCharacterUpper(word: string) {

@@ -5,7 +5,7 @@
     "icon": "images/icon2.png",
     "author": "Jason Dent",
     "license": "MIT",
-    "version": "0.10.6",
+    "version": "0.10.7",
     "publisher": "streetsidesoftware",
     "repository": {
         "type": "git",
@@ -89,7 +89,9 @@
                     "default": [
                         "node_modules",
                         "vscode-extension",
-                        ".git"
+                        ".git",
+                        ".vscode",
+                        "typings"
                     ],
                     "description": "Specify paths/files to ignore."
                 },
