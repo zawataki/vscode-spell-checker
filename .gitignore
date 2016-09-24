@@ -32,4 +32,8 @@ node_modules
 # Optional REPL history
 .node_repl_history
 
+**/typings
+
+# Keep the .vscode directories to help with debugging the extension
 !server/.vscode
+!client/.vscode
