@@ -31,6 +31,13 @@ interface Settings {
     cSpell: CSpellPackageSettings;
 }
 
+interface VsCodeSettings {
+    [key: string]: any;
+}
+
+let vsCodeSettings: VsCodeSettings = {};
+
+
 function run() {
     // debounce buffer
     const validationRequestStream: Rx.ReplaySubject<TextDocument> = new Rx.ReplaySubject<TextDocument>(1);
@@ -80,6 +87,7 @@ function run() {
     connection.onDidChangeConfiguration((change) => {
         const { cSpell = {} } = change.settings;
         setupAssociations(cSpell as CSpellPackageSettings);
+        vsCodeSettings = change.settings;
         Object.assign(settings, cSpell);
         setUserWords(settings.userWords, settings.words);
 

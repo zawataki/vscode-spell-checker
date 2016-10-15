@@ -2,10 +2,10 @@
   "name": "code-spell-checker",
   "description": "Spelling checker designed for source code",
   "displayName": "cSpell",
-  "icon": "images/icon2.png",
+  "icon": "images/cSpell.png",
   "author": "Jason Dent",
   "license": "MIT",
-  "version": "0.10.12",
+  "version": "0.11.0",
   "publisher": "streetsidesoftware",
   "repository": {
     "type": "git",
@@ -16,7 +16,7 @@
   },
   "homepage": "https://github.com/Jason-Rev/vscode-spell-checker/blob/master/client/README.md",
   "engines": {
-    "vscode": "^1.5.0"
+    "vscode": "^1.6.0"
   },
   "categories": [
     "Linters",
@@ -36,6 +36,10 @@
       {
         "command": "cSpell.addWordToDictionary",
         "title": "Add Word to Dictionary"
+      },
+      {
+        "command": "cSpell.addWordToUserDictionary",
+        "title": "Add Word to Global Dictionary"
       }
     ],
     "configuration": {
@@ -123,13 +127,15 @@
     "postinstall": "node ./node_modules/vscode/bin/install"
   },
   "devDependencies": {
-    "chai": "^3.5.0",
+    "chai": "^3.5",
     "lorem-ipsum": "^1.0.3",
     "typescript": "^2.0.3",
     "typings": "^1.4.0",
     "vscode": "^1.0.0",
+    "mocha": "^3.1",
     "@types/node": "^6.0.40",
-    "@types/mocha": "^2.2.32"
+    "@types/mocha": "^2.2",
+    "@types/chai": "^3.4"
   },
   "dependencies": {
     "comment-json": "^1.1.3",
