@@ -6,7 +6,7 @@ describe('tests the speed of using Sets vs Objects', function() {
     const pWords = loadWords(__dirname + '/../../dictionaries/wordsEn.txt');
 
     it('tests character Set', () => {
-        let startTime: number[]  = process.hrtime();
+        let startTime: [number, number]  = process.hrtime();
         return pWords
             .reduce((a, w) => { a.add(w); return a; }, new Set<string>())
             .tap(() => { console.log('Elapsed: ' + timeDiff(process.hrtime(startTime))); })
@@ -14,7 +14,7 @@ describe('tests the speed of using Sets vs Objects', function() {
     });
 
     it('tests character Object', () => {
-        let startTime: number[]  = process.hrtime();
+        let startTime: [number, number]  = process.hrtime();
         return pWords
             .reduce((a, w) => { a[w] = true; return a; }, Object.create(null))
             .tap(() => { console.log('Elapsed: ' + timeDiff(process.hrtime(startTime))); })
@@ -24,6 +24,6 @@ describe('tests the speed of using Sets vs Objects', function() {
 });
 
 
-function timeDiff([seconds, nanoseconds]: number[]) {
+function timeDiff([seconds, nanoseconds]: [number, number]) {
     return seconds + nanoseconds / 1000000000.0;
 }

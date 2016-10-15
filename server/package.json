@@ -29,6 +29,9 @@
     "vscode": "^1.0.0",
     "@types/node": "^6.0",
     "@types/mocha": "^2.2",
+    "@types/minimatch": "^2.0",
+    "@types/rx": "^2.5",
+    "@types/rx-node": "^0.0",
     "@types/xregexp": "^3.0",
     "@types/chai": "^3.4"
   },
