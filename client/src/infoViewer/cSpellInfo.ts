@@ -271,3 +271,16 @@ export function activate(context: vscode.ExtensionContext, client: CSpellClient)
         makeDisposable(subOnDidChangeTextDocument),
     );
 }
+
+function resolveMaterialComponentFile(component: string, extension: string): string {
+    const [, filename] = component.split('/');
+    return require.resolve(path.join(component, 'dist', filename + extension));
+}
+
+export function resolveMaterialCSS(component: string) {
+    return resolveMaterialComponentFile(component, '.min.css');
+}
+
+export function resolveMaterialJS(component: string) {
+    return resolveMaterialComponentFile(component, '.min.js');
+}
