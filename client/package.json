@@ -5,11 +5,7 @@
     "icon": "images/SpellCheck.png",
     "author": "Jason Dent",
     "license": "MIT",
-<<<<<<< HEAD
     "version": "1.4.12",
-=======
-    "version": "1.4.11",
->>>>>>> Prepare to publish 1.4.11
     "publisher": "streetsidesoftware",
     "repository": {
         "type": "git",
