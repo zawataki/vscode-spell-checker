@@ -1,6 +1,7 @@
 # Release Notes:
 
 ## [unreleased]
+* Added Multi-Root Support
 
 ## [1.4.12]
 * Speed up suggestions.
