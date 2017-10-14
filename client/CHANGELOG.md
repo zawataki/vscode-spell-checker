@@ -1,5 +1,7 @@
 # Release Notes:
 
+## [unreleased]
+
 ## [1.4.11]
 * Improve suggests for words with accents.
 * Improve spell checking on compound words.
@@ -283,8 +285,7 @@
 <!---
     These are at the bottom because the VSCode Marketplace leaves a bit space at the top
 
-    cSpell:ignore jsja goededag alek wheerd behaviour tsmerge QQQQQ networkerrorexecption
-    cSpell:enableCompoundWords
+    cSpell:ignore jsja goededag alek wheerd behaviour tsmerge QQQQQ networkerrorexecption scrollbar
     cSpell:includeRegExp Everything
     cSpell:ignore hte
     cSpell:words Verdana
