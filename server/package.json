@@ -26,13 +26,13 @@
   },
   "devDependencies": {
     "@types/chai": "^4.0.4",
-    "@types/minimatch": "^2.0.29",
+    "@types/minimatch": "^3.0.1",
     "@types/mocha": "^2.2.43",
     "@types/node": "^6.0.89",
     "@types/xregexp": "^3.0",
     "chai": "^4.1.2",
     "lorem-ipsum": "^1.0.4",
-    "mocha": "^3.5.3",
+    "mocha": "^4.0.1",
     "rimraf": "^2.6.2",
     "ts-node": "^3.2.0",
     "typescript": "^2.5.3"
