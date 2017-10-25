@@ -59,7 +59,7 @@ export function onCodeActionHandler(documents: TextDocuments, fnSettings: (doc: 
         const [ docSetting, dictionary ] = await getSettings(textDocument);
         const { numSuggestions = defaultNumSuggestions } = docSetting;
 
-        function replaceText(range: LangServer.Range, text) {
+        function replaceText(range: LangServer.Range, text: string) {
             return LangServer.TextEdit.replace(range, text || '');
         }
 
