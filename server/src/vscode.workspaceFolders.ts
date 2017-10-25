@@ -48,8 +48,20 @@ export function registerOnDidChangeWorkspaceFolders (connection: vscode.Connecti
 
 export type Connection = vscode.Connection<_, _, _, _, _, vscode.ProposedFeatures.WorkspaceFolders & vscode.ProposedFeatures.Configuration>;
 
-export function getDocumentSettings(connection: Connection, document: vscode.TextDocument): Thenable<any> {
-    return connection.workspace.getConfiguration({ scopeUri: document.uri });
+export interface TextDocumentUri {
+    uri: string;
+}
+
+export interface TextDocumentUriLangId extends TextDocumentUri {
+    languageId: string;
+}
+
+export function getDocumentSettings(connection: Connection, document: TextDocumentUri): Thenable<any> {
+    return getConfiguration(connection, document.uri);
+}
+
+export function getConfiguration(connection: Connection, uri: string): Thenable<any> {
+    return connection.workspace.getConfiguration({ scopeUri: uri });
 }
 
 export function getWorkspaceFolders(connection: Connection): Thenable<WorkspaceFolder[] | null> {

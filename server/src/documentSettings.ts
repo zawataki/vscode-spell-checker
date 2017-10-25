@@ -1,5 +1,5 @@
 // cSpell:ignore pycache
-import { Connection, TextDocument } from './vscode.workspaceFolders';
+import { Connection, TextDocumentUri } from './vscode.workspaceFolders';
 import * as vscode from './vscode.workspaceFolders';
 import {
     ExcludeFilesGlobMap,
@@ -10,10 +10,25 @@ import * as path from 'path';
 
 import * as CSpell from 'cspell';
 import { CSpellUserSettings } from './cspellConfig';
+import Uri from 'vscode-uri'
+
+// The settings interface describe the server relevant settings part
+export interface Settings {
+    cSpell?: CSpellUserSettings;
+    search?: {
+        exclude?: ExcludeFilesGlobMap;
+    };
+}
+
+interface VsCodeSettings {
+    [key: string]: any;
+}
 
 interface ExtSettings {
+    uri: string;
+    vscodeSettings: Settings;
     settings: CSpellUserSettings;
-    fnExclude: (uri: string) => boolean;
+    fnFileExclusionTest: ExclusionFunction;
 }
 
 const defaultExclude: Glob[] = [
@@ -31,21 +46,41 @@ const defaultExclude: Glob[] = [
 
 export class DocumentSettings {
     // Cache per folder settings
-    private _settingsByWorkspaceFolder: Promise<Map<string, CSpellUserSettings>> | undefined;
+    private _settingsByWorkspaceFolder: Promise<Map<string, ExtSettings>> | undefined;
     private readonly settingsByDoc = new Map<string, CSpellUserSettings>();
     private _folders: Promise<vscode.WorkspaceFolder[]> | undefined;
     readonly configsToImport = new Set<string>();
+    private _importSettings: CSpellUserSettings | undefined;
 
     constructor(readonly connection: Connection, readonly defaultSettings: CSpellUserSettings) {}
 
-    async getSettings(document: TextDocument): Promise<CSpellUserSettings> {
-        return this.fetchDocSettings(document);
+    async getSettings(document: TextDocumentUri): Promise<CSpellUserSettings> {
+        return this.getUriSettings(document.uri);
     };
-    // isExcluded(document: TextDocument): Promise<boolean>;
+
+    async getUriSettings(uri?: string): Promise<CSpellUserSettings> {
+        if (!uri) {
+            return CSpell.mergeSettings(this.defaultSettings, this.importSettings);
+        }
+        return this.fetchUriSettings(uri!);
+    }
+
+    async isExcluded(uri: string): Promise<boolean> {
+        const settingsByWorkspaceFolder = await this.findMatchingFolderSettings(uri);
+        const fnExclTests = settingsByWorkspaceFolder.map(s => s.fnFileExclusionTest);
+        for (const fn of fnExclTests) {
+            if (fn(uri)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     resetSettings() {
         this._settingsByWorkspaceFolder = undefined;
         this.settingsByDoc.clear();
         this._folders = undefined;
+        this._importSettings = undefined;
     };
 
     get folders(): Promise<vscode.WorkspaceFolder[]> {
@@ -55,32 +90,37 @@ export class DocumentSettings {
         return this._folders!;
     }
 
-    get settingsByWorkspaceFolder() {
+    private get settingsByWorkspaceFolder() {
         if (!this._settingsByWorkspaceFolder) {
             this._settingsByWorkspaceFolder = this.fetchFolderSettings();
         }
         return this._settingsByWorkspaceFolder!;
     }
 
+    get importSettings() {
+        if (!this._importSettings) {
+            const importPaths = [...configsToImport.keys()].sort();
+            this._importSettings = CSpell.readSettingsFiles(importPaths);
+        }
+        return this._importSettings!;
+    }
+
     registerConfigurationFile(path: string) {
         configsToImport.add(path);
     }
 
-
-    private async fetchDocSettings(document: TextDocument): Promise<CSpellUserSettings> {
-        const docUri = document.uri;
-        const settingsVSCode: Settings = await vscode.getDocumentSettings(this.connection, document);
-        // Get folder level settings
-        const settingsByFolder = await this.settingsByWorkspaceFolder;
-        const matchingFolderSettings = [...settingsByFolder]
-            .filter(([uri]) => uri === docUri.slice(0, uri.length))
-            .sort((a, b) => a.length - b.length)
-            .reverse();
-        const folderSettings = matchingFolderSettings.map(([, s]) => s);
-        const importPaths = [...configsToImport.keys()].sort();
-        const importSettings = CSpell.readSettingsFiles(importPaths);
-        const spellSettings = CSpell.mergeSettings(this.defaultSettings, importSettings, ...folderSettings, settingsVSCode.cSpell || {});
+    private async fetchUriSettings(uri: string): Promise<CSpellUserSettings> {
+        const folderSettings = (await this.findMatchingFolderSettings(uri)).map(s => s.settings);
+        const spellSettings = CSpell.mergeSettings(this.defaultSettings, this.importSettings, ...folderSettings);
         return spellSettings;
+    }
+
+    private async findMatchingFolderSettings(docUri: string): Promise<ExtSettings[]> {
+        const settingsByFolder = await this.settingsByWorkspaceFolder;
+        return [...settingsByFolder.values()]
+            .filter(({uri}) => uri === docUri.slice(0, uri.length))
+            .sort((a, b) => a.uri.length - b.uri.length)
+            .reverse();
     }
 
     private async fetchFolders() {
@@ -89,29 +129,32 @@ export class DocumentSettings {
 
     private async fetchFolderSettings() {
         const folders = await this.fetchFolders();
-        return new Map(readAllWorkspaceFolderSettings(folders));
+        const workplaceSettings = readAllWorkspaceFolderSettings(folders);
+        const extSettings = workplaceSettings.map(async ([uri, settings]) => {
+            const vsCodeSetting: Settings = await vscode.getConfiguration(this.connection, uri);
+
+            const { search = {}, cSpell = {} } = vsCodeSetting;
+            const { exclude = {} } = search;
+
+            const mergedSettings = CSpell.mergeSettings(settings, cSpell);
+            const { ignorePaths = []} = mergedSettings;
+            const globs = defaultExclude.concat(ignorePaths, CSpell.ExclusionHelper.extractGlobsFromExcludeFilesGlobMap(exclude));
+            const root = Uri.parse(uri).path;
+            const fnFileExclusionTest = CSpell.ExclusionHelper.generateExclusionFunctionForUri(globs, root);
+
+            const ext: ExtSettings = {
+                uri,
+                vscodeSettings: vsCodeSetting,
+                settings: mergedSettings,
+                fnFileExclusionTest,
+            };
+            return ext;
+        });
+        return new Map<string, ExtSettings>((await Promise.all(extSettings)).map(s => [s.uri, s] as [string, ExtSettings]));
     }
 }
 
 const configsToImport = new Set<string>();
-
-// The settings interface describe the server relevant settings part
-interface Settings {
-    cSpell?: CSpellUserSettings;
-    search?: {
-        exclude?: ExcludeFilesGlobMap;
-    };
-}
-
-interface VsCodeSettings {
-    [key: string]: any;
-}
-
-interface ExtDocSettings {
-    vscodeSettings: Settings;
-    cSpellSettings: CSpellUserSettings;
-    fnFileExclusionTest: ExclusionFunction;
-}
 
 function configPathsForRoot(workspaceRoot?: string) {
     return workspaceRoot ? [
