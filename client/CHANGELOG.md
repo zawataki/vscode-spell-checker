@@ -1,6 +1,8 @@
 # Release Notes:
 
-## [unreleased]
+## [1.4.11]
+* Improve suggests for words with accents.
+* Improve spell checking on compound words.
 
 ## [1.4.10]
 * Allow the diagnostic level to be configured. In reference to [Highlight color #128](https://github.com/Jason-Rev/vscode-spell-checker/issues/128) and [disable scrollbar annotations #144](https://github.com/Jason-Rev/vscode-spell-checker/issues/144)
@@ -281,7 +283,8 @@
 <!---
     These are at the bottom because the VSCode Marketplace leaves a bit space at the top
 
-    cSpell:ignore jsja goededag alek wheerd behaviour tsmerge QQQQQ networkerrorexecption scrollbar
+    cSpell:ignore jsja goededag alek wheerd behaviour tsmerge QQQQQ networkerrorexecption
+    cSpell:enableCompoundWords
     cSpell:includeRegExp Everything
     cSpell:ignore hte
     cSpell:words Verdana
