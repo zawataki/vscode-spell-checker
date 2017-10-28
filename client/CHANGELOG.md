@@ -2,6 +2,9 @@
 
 ## [unreleased]
 
+## [1.4.12]
+* Speed up suggestions.
+
 ## [1.4.11]
 * Improve suggests for words with accents.
 * Improve spell checking on compound words.
