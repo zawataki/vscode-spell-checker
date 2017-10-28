@@ -27,39 +27,29 @@ function extractText(textDocument: TextDocument, range: LangServer.Range) {
 }
 
 
-export function onCodeActionHandler(documents: TextDocuments, fnSettings: (doc: TextDocument) => Promise<CSpellUserSettings>) {
+export function onCodeActionHandler(documents: TextDocuments, fnSettings: () => CSpellUserSettings) {
 
-    type SettingsDictPair = [CSpellUserSettings, SpellingDictionary];
-    interface CacheEntry {
-        version: number;
-        settings: Promise<SettingsDictPair>;
-    }
+    const settingsCache = new Map<string, {version: number, settings: [CSpellUserSettings, Promise<SpellingDictionary>]}>();
 
-    const settingsCache = new Map<string, CacheEntry>();
-
-    async function getSettings(doc: TextDocument): Promise<[CSpellUserSettings, SpellingDictionary]> {
+    function getSettings(doc: TextDocument): [CSpellUserSettings, Promise<SpellingDictionary>] {
         const cached = settingsCache.get(doc.uri);
         if (!cached || cached.version !== doc.version) {
-            settingsCache.set(doc.uri, { version: doc.version, settings: constructSettings(doc) });
+            const docSetting = cspell.constructSettingsForText(fnSettings(), doc.getText(), doc.languageId);
+            const dict = cspell.getDictionary(docSetting);
+            settingsCache.set(doc.uri, { version: doc.version, settings: [docSetting, dict] });
         }
         return settingsCache.get(doc.uri)!.settings;
     }
 
-    async function constructSettings(doc: TextDocument): Promise<SettingsDictPair> {
-        const docSetting = cspell.constructSettingsForText(await fnSettings(doc), doc.getText(), doc.languageId);
-        const dict = await cspell.getDictionary(docSetting);
-        return  [docSetting, dict];
-    }
-
-    return async (params: CodeActionParams) => {
+    return (params: CodeActionParams) => {
         const commands: Command[] = [];
         const { context, textDocument: { uri } } = params;
         const { diagnostics } = context;
         const textDocument = documents.get(uri);
-        const [ docSetting, dictionary ] = await getSettings(textDocument);
+        const [ docSetting, dictionary ] = getSettings(textDocument);
         const { numSuggestions = defaultNumSuggestions } = docSetting;
 
-        function replaceText(range: LangServer.Range, text: string) {
+        function replaceText(range: LangServer.Range, text?: string) {
             return LangServer.TextEdit.replace(range, text || '');
         }
 
@@ -80,7 +70,7 @@ export function onCodeActionHandler(documents: TextDocuments, fnSettings: (doc: 
             return dictionary.suggest(word, numSugs).map(sr => sr.word.replace(regexJoinedWords, ''));
         }
 
-        function genSuggestions(dictionary: SpellingDictionary) {
+        return dictionary.then(dictionary => {
             const spellCheckerDiags = diagnostics.filter(diag => diag.source === Validator.diagSource);
             let altWord: string | undefined;
             for (const diag of spellCheckerDiags) {
@@ -132,8 +122,6 @@ export function onCodeActionHandler(documents: TextDocuments, fnSettings: (doc: 
                 ));
             }
             return commands;
-        }
-
-        return genSuggestions(dictionary);
+        });
     };
 }
