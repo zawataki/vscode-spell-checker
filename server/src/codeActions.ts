@@ -97,6 +97,8 @@ export function onCodeActionHandler(documents: TextDocuments, fnSettings: (doc: 
                             textDocument.version,
                             [ replaceText(diag.range, sugWord) ]
                         ));
+                        /*
+                        // Turn of making multiple suggestions for the same words.
                         const words = sugWord.replace(/[ _.]/g, '_').split('_');
                         if (words.length > 1) {
                             if (Text.isUpperCase(word)) {
@@ -116,6 +118,7 @@ export function onCodeActionHandler(documents: TextDocuments, fnSettings: (doc: 
                                 });
                             }
                         }
+                        */
                     });
             }
             const word = extractText(textDocument, params.range) || altWord;
