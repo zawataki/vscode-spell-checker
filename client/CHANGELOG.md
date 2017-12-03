@@ -1,5 +1,9 @@
 # Release Notes:
 
+## [1.5.1]
+
+* Revert to 1.4.x until 1.5.x works on windows.
+
 ## [1.4.12]
 * Speed up suggestions.
 
