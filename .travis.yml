@@ -16,10 +16,13 @@ before_install:
     fi
 
 script:
+  - npm audit
   - cd client
+  - npm audit
   - npm install
   - cd ..
   - cd server
+  - npm audit
   - npm install
   - npm run build
   - npm test
